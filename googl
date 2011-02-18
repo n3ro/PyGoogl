@@ -1,0 +1,37 @@
+#! /usr/bin/python
+
+import sys, urllib2, urllib, simplejson, sys
+
+API_URL_SHORTEN = "https://www.googleapis.com/urlshortener/v1/url"
+API_URL_EXPAND = "https://www.googleapis.com/urlshortener/v1/url?shortUrl="
+response = ""
+
+
+
+def shorten(url_shorten):
+    req = urllib2.Request(API_URL_SHORTEN)
+    req.add_header('Content-Type','application/json')
+    fd = urllib2.urlopen(req, '{"longUrl": "'+url_shorten+'"}')
+    data = fd.read(1024)
+    response = simplejson.loads(data)    
+    return response['id']
+
+def expand(url_expand):
+    req = urllib2.Request(API_URL_EXPAND+url_expand)
+    req.add_header('Content-Type','application/json')
+    resp = urllib2.urlopen(req)
+    data = resp.read()
+    response = simplejson.loads(data)
+    return response['longUrl'] 
+
+
+if __name__ == "__main__":
+   if sys.argv > 1:
+      if sys.argv[1].startswith('http://goo.gl/') == True:
+          print "expanding: " + sys.argv[1]
+          print "url: " + expand(sys.argv[1])
+      elif sys.argv[1].startswith('http://'):
+          print "shortening: " + sys.argv[1]
+          print "url: " + shorten(sys.argv[1])
+   else:
+      print "usage: \n      googl http://www.url.com"
