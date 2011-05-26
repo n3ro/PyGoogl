@@ -26,6 +26,7 @@ def expand(url_expand):
 
 
 if __name__ == "__main__":
+   #TODO: add regexp to validate urls
    if sys.argv > 1:
       if sys.argv[1].startswith('http://goo.gl/') == True:
           print "expanding: " + sys.argv[1]
