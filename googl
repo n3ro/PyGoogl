@@ -1,38 +1,56 @@
 #! /usr/bin/python
-
 import sys, urllib2, urllib, simplejson, sys
+from urllib2 import HTTPError
 
 API_URL_SHORTEN = "https://www.googleapis.com/urlshortener/v1/url"
 API_URL_EXPAND = "https://www.googleapis.com/urlshortener/v1/url?shortUrl="
+try:
+   key = open('api.key','r').read().strip()
+except IOError:
+   key = ""
 response = ""
 
-
-
 def shorten(url_shorten):
-    req = urllib2.Request(API_URL_SHORTEN)
+    if key:
+       req = urllib2.Request(API_URL_SHORTEN + '?key=%s' % key)
+    else:
+       req = urllib2.Request(API_URL_SHORTEN)
     req.add_header('Content-Type','application/json')
-    fd = urllib2.urlopen(req, '{"longUrl": "'+url_shorten+'"}')
-    data = fd.read(1024)
-    response = simplejson.loads(data)    
-    return response['id']
+    try:
+       uopen = urllib2.urlopen(req, '{"longUrl": "'+url_shorten+'"}')
+       data = uopen.read(1024)
+       response = simplejson.loads(data)
+       resp = response['id']
+    except URLError, e:
+       resp = e.reason
+    return resp
 
 def expand(url_expand):
-    req = urllib2.Request(API_URL_EXPAND+url_expand)
+    if key:
+       req = urllib2.Request(API_URL_EXPAND + url_expand + ('&key=%s' % key))
+    else:
+       req = urllib2.Request(API_URL_EXPAND + url_expand)
     req.add_header('Content-Type','application/json')
-    resp = urllib2.urlopen(req)
-    data = resp.read()
-    response = simplejson.loads(data)
-    return response['longUrl'] 
-
+    try:
+       uopen = urllib2.urlopen(req)
+       data = uopen.read()
+       response = simplejson.loads(data)
+       resp = response['longUrl']
+    except HTTPError, e:
+       resp = "code %d!" % e.code
+    return resp
 
 if __name__ == "__main__":
+   #print sys.argv
    #TODO: add regexp to validate urls
-   if sys.argv > 1:
+   if len(sys.argv) > 1:
       if sys.argv[1].startswith('http://goo.gl/') == True:
           print "expanding: " + sys.argv[1]
           print "url: " + expand(sys.argv[1])
       elif sys.argv[1].startswith('http://'):
           print "shortening: " + sys.argv[1]
           print "url: " + shorten(sys.argv[1])
+      else:
+          print "Google URL Shortener \n usage: \n      googl http://www.url.com \n      googl http://goo.gl/fbsS"
    else:
-      print "usage: \n      googl http://www.url.com"
+      print "No URL provided!"
